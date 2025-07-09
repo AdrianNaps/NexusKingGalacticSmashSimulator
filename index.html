@@ -14,10 +14,28 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            user-select: none; /* Prevent text selection globally */
+        }
+
+        .blog-link {
+            margin-top: 10px;
+            color: #a0a0a0;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .blog-link a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        .blog-link a:hover {
+            text-decoration: underline;
         }
 
         .controls {
             margin-bottom: 20px;
+            margin-top: 20px;
             display: flex;
             gap: 15px;
             align-items: center;
@@ -54,36 +72,99 @@
             box-sizing: border-box;
         }
 
-        .ring {
+        .core {
+            position: absolute;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid #dc2626;
+            z-index: 10;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            text-shadow: 2px 2px 2px rgba(0,0,0,0.9);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .nexus-king {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            z-index: 10;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: #1f2937;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .guardian {
+            position: absolute;
+            background: #a3a3a3;
+            border-radius: 50%;
+            border: 2px solid #737373;
+            z-index: 9;
+            box-sizing: border-box;
+            width: 22.5px;
+            height: 22.5px;
+            pointer-events: none;
+        }
+
+        .guardian-line {
+            position: absolute;
+            background: #87ceeb;
+            height: 6px;
+            transform-origin: 0 0;
+            pointer-events: none;
+            z-index: 8;
+        }
+
+        .guardian-dot {
+            position: absolute;
+            background: #87ceeb;
+            border-radius: 50%;
+            border: 1px solid #4a90e2;
+            z-index: 10;
+            box-sizing: border-box;
+            width: 12px;
+            height: 12px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-user-drag: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .guardian-dot:hover {
+            background: #60a5fa;
+            border-color: #2563eb;
+            transform: scale(1.3);
+            box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+        }
+
+        .guardian-dot:active {
+            cursor: grabbing;
+        }
+
+        .expansion-ring {
             position: absolute;
             border-radius: 50%;
-            border: none;
             pointer-events: none;
-            background: transparent;
-        }
-
-        .middle-ring {
-            width: 460px;
-            height: 460px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .center-circle {
-            width: 180px;
-            height: 180px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: transparent;
-            border: none;
-        }
-
-        .interactive-label {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #a78bfa;
+            z-index: 5;
         }
 
         .radial-line {
@@ -91,24 +172,6 @@
             background: rgba(255, 255, 255, 0.7);
             transform-origin: center;
             pointer-events: none;
-        }
-
-        .core {
-            position: absolute;
-            background: #ef4444;
-            border-radius: 50%;
-            border: 2px solid #dc2626;
-            transition: none;
-            z-index: 10;
-        }
-
-        .expansion-ring {
-            position: absolute;
-            border: 2px solid rgba(239, 68, 68, 0.6);
-            border-radius: 50%;
-            background: rgba(239, 68, 68, 0.1);
-            pointer-events: none;
-            z-index: 5;
         }
 
         .info-panel {
@@ -127,6 +190,9 @@
 </head>
 <body>
     <h1>Nexus King Galactic Smash Simulator</h1>
+    <div class="blog-link">
+        Check the blog: <a href="https://humbleguild.blogspot.com/" target="_blank">https://humbleguild.blogspot.com/</a>
+    </div>
     
     <div class="controls">
         <button id="playBtn">Play</button>
@@ -140,7 +206,17 @@
         </div>
         <div>
             <label>
+                <input type="checkbox" id="nexusKingToggle"> Place Nexus King
+            </label>
+        </div>
+        <div>
+            <label>
                 <input type="checkbox" id="markersToggle" checked> Show Markers
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="setLinesToggle"> Set Lines
             </label>
         </div>
         <span>Speed: <span id="speedDisplay">1x</span></span>
@@ -148,9 +224,7 @@
     </div>
 
     <div id="arena">
-        <!-- Arena rings and center circle -->
-        <div class="ring middle-ring"></div>
-        <div class="ring center-circle"></div>
+        <!-- Clean arena with just the background image -->
     </div>
 
     <div class="info-panel">
@@ -166,14 +240,15 @@
         const ARENA_CENTER = { x: 400, y: 400 }; // Center of 800px arena
         const UNIT_IN_PIXELS = 75;
         const CORE_DIAMETER = 1 * UNIT_IN_PIXELS; // 75px
+        const NEXUS_KING_DIAMETER = CORE_DIAMETER * 0.5; // 37.5px (half size)
+        const GUARDIAN_SIZE = 30 * 0.75; // 22.5px (25% smaller)
         const EXPANSION_RING_WIDTH = 0.38 * UNIT_IN_PIXELS; // 28.5px
         const CORE_SPEED = UNIT_IN_PIXELS / 5000; // 75px per 5000ms
         const EXPANSION_INTERVAL = 2000; // 2 seconds
 
-        // Core class
+        // Core class (regular moving cores only)
         class Core {
             constructor(clickX, clickY, isClockwise, coreNumber) {
-                // Store the exact click position as the center of the core
                 this.centerX = clickX;
                 this.centerY = clickY;
                 this.isClockwise = isClockwise;
@@ -188,7 +263,7 @@
                 this.element.style.width = CORE_DIAMETER + 'px';
                 this.element.style.height = CORE_DIAMETER + 'px';
                 
-                // Create a span for the text to ensure proper centering
+                // Create a span for the text
                 const textSpan = document.createElement('span');
                 textSpan.textContent = `${isClockwise ? 'CW' : 'CCW'}${coreNumber}`;
                 textSpan.style.position = 'absolute';
@@ -202,18 +277,16 @@
                 textSpan.style.fontFamily = 'Arial, sans-serif';
                 this.element.appendChild(textSpan);
                 
-                this.currentRing = null; // Only one ring at a time
-                this.ringLevel = 0; // Track which ring level we're on
+                this.currentRing = null;
+                this.ringLevel = 0;
                 this.lastExpansionTime = 0;
-                this.intervalCount = 0; // Track how many intervals have passed
-                this.maxIntervals = 15; // Core disappears after 15 intervals
+                this.intervalCount = 0;
+                this.maxIntervals = 16; // Increased to account for 0th interval
                 
                 document.getElementById('arena').appendChild(this.element);
                 
-                // Position the core exactly where clicked (center of core at click position)
                 const left = clickX - CORE_DIAMETER/2;
                 const top = clickY - CORE_DIAMETER/2;
-                
                 this.element.style.left = left + 'px';
                 this.element.style.top = top + 'px';
                 
@@ -225,7 +298,6 @@
                 const x = ARENA_CENTER.x + Math.cos(this.angle) * this.trackRadius;
                 const y = ARENA_CENTER.y + Math.sin(this.angle) * this.trackRadius;
                 
-                // Position the core so its CENTER is at the calculated position
                 this.element.style.left = (x - CORE_DIAMETER/2) + 'px';
                 this.element.style.top = (y - CORE_DIAMETER/2) + 'px';
                 
@@ -234,41 +306,38 @@
             }
 
             update(deltaTime, currentTime) {
-                // Move along circular track (clockwise or counter-clockwise)
+                // Move along circular track
                 const angularSpeed = CORE_SPEED / this.trackRadius;
                 const direction = this.isClockwise ? 1 : -1;
                 this.angle += angularSpeed * deltaTime * direction;
                 this.updatePosition();
 
-                // Handle expansions - only for first 15 intervals
+                // Handle expansions
                 if (this.intervalCount < this.maxIntervals && currentTime - this.lastExpansionTime >= EXPANSION_INTERVAL) {
                     this.expand();
                     this.lastExpansionTime = currentTime;
                     this.intervalCount++;
                     
-                    // Remove ring after 15th interval
                     if (this.intervalCount >= this.maxIntervals && this.currentRing) {
                         this.currentRing.remove();
                         this.currentRing = null;
                     }
                 }
 
-                // Update current ring to follow the core (if it exists)
                 if (this.currentRing) {
                     this.currentRing.updatePosition(this.x, this.y);
                 }
 
-                return true; // Core always continues to exist
+                return true;
             }
 
             expand() {
-                // Remove previous ring
                 if (this.currentRing) {
                     this.currentRing.remove();
                 }
                 
-                // Create new ring at next level (only if under 15 intervals)
-                if (this.intervalCount < this.maxIntervals) {
+                // Skip creating ring for interval 0 (the 0th interval)
+                if (this.intervalCount > 0 && this.intervalCount < this.maxIntervals) {
                     this.ringLevel++;
                     this.currentRing = new ExpansionRing(this.x, this.y, this.ringLevel);
                 }
@@ -282,6 +351,367 @@
             }
         }
 
+        // Nexus King class (independent from Core)
+        class NexusKing {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.guardians = [];
+                this.guardiansSpawned = false;
+                this.countdownSeconds = 7;
+                this.simulationStartTime = null; // Track when simulation actually starts
+                this.beamsFired = false; // Track if beams have been fired
+                
+                this.element = document.createElement('div');
+                this.element.className = 'nexus-king';
+                this.element.style.width = NEXUS_KING_DIAMETER + 'px';
+                this.element.style.height = NEXUS_KING_DIAMETER + 'px';
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = 'NK';
+                textSpan.style.position = 'absolute';
+                textSpan.style.top = '30%';
+                textSpan.style.left = '50%';
+                textSpan.style.transform = 'translate(-50%, -50%)';
+                textSpan.style.fontWeight = 'bold';
+                textSpan.style.fontSize = '10px';
+                textSpan.style.color = '#1f2937';
+                textSpan.style.textShadow = '1px 1px 1px rgba(255,255,255,0.8)';
+                textSpan.style.fontFamily = 'Arial, sans-serif';
+                this.element.appendChild(textSpan);
+                
+                // Add countdown display
+                this.countdownSpan = document.createElement('span');
+                this.countdownSpan.textContent = this.countdownSeconds;
+                this.countdownSpan.style.position = 'absolute';
+                this.countdownSpan.style.top = '70%';
+                this.countdownSpan.style.left = '50%';
+                this.countdownSpan.style.transform = 'translate(-50%, -50%)';
+                this.countdownSpan.style.fontWeight = 'bold';
+                this.countdownSpan.style.fontSize = '8px';
+                this.countdownSpan.style.color = '#dc2626';
+                this.countdownSpan.style.textShadow = '1px 1px 1px rgba(255,255,255,0.8)';
+                this.countdownSpan.style.fontFamily = 'Arial, sans-serif';
+                this.element.appendChild(this.countdownSpan);
+                
+                document.getElementById('arena').appendChild(this.element);
+                
+                const left = x - NEXUS_KING_DIAMETER/2;
+                const top = y - NEXUS_KING_DIAMETER/2;
+                this.element.style.left = left + 'px';
+                this.element.style.top = top + 'px';
+                
+                // Spawn guardians immediately
+                this.spawnGuardians();
+                this.guardiansSpawned = true;
+            }
+
+            update(deltaTime, currentTime) {
+                // Initialize simulation start time on first update
+                if (this.simulationStartTime === null) {
+                    this.simulationStartTime = currentTime;
+                }
+                
+                // Update countdown based on simulation time
+                const elapsedSeconds = (currentTime - this.simulationStartTime) / 1000;
+                const remainingSeconds = Math.max(0, this.countdownSeconds - elapsedSeconds);
+                const displaySeconds = Math.ceil(remainingSeconds);
+                
+                if (displaySeconds > 0) {
+                    this.countdownSpan.textContent = displaySeconds;
+                } else {
+                    this.countdownSpan.textContent = '';
+                    
+                    // Fire beams when countdown completes (only once)
+                    if (remainingSeconds <= 0 && !this.beamsFired) {
+                        this.fireBeams();
+                        this.beamsFired = true;
+                    }
+                }
+                
+                // Disappear after 8 seconds (1 second after beams fire)
+                if (elapsedSeconds >= 8) {
+                    this.disappear();
+                }
+            }
+
+            disappear() {
+                // Remove NK and all guardians from the simulation
+                const nkIndex = cores.indexOf(this);
+                if (nkIndex === -1) { // NK isn't in cores array, handle separately
+                    nexusKing = null;
+                }
+                this.remove();
+                updateCoreCount();
+            }
+
+            fireBeams() {
+                this.guardians.forEach(guardian => {
+                    guardian.fireBeam();
+                });
+            }
+
+            resetCountdown() {
+                this.simulationStartTime = null;
+                this.beamsFired = false;
+                this.countdownSpan.textContent = this.countdownSeconds;
+            }
+
+            spawnGuardians() {
+                const guardianDistance = 37.5; // Adjusted for smaller NK
+                const angles = [0, 120, 240];
+                
+                angles.forEach(angle => {
+                    const guardian = new Guardian(this.x, this.y, angle, guardianDistance);
+                    this.guardians.push(guardian);
+                });
+            }
+
+            moveToPosition(newX, newY) {
+                this.x = newX;
+                this.y = newY;
+                
+                const left = newX - NEXUS_KING_DIAMETER/2;
+                const top = newY - NEXUS_KING_DIAMETER/2;
+                this.element.style.left = left + 'px';
+                this.element.style.top = top + 'px';
+                
+                this.guardians.forEach(guardian => {
+                    guardian.updatePosition(this.x, this.y);
+                });
+            }
+
+            remove() {
+                this.element.remove();
+                this.guardians.forEach(guardian => guardian.remove());
+            }
+        }
+
+        // Guardian class for Nexus King
+        class Guardian {
+            constructor(nkX, nkY, angle, distance) {
+                this.angle = angle;
+                this.distance = distance;
+                this.nkX = nkX;
+                this.nkY = nkY;
+                
+                // Direction line properties
+                this.lineLength = 25; // Initial line length
+                this.lineAngle = 0; // Line points away from NK initially
+                
+                this.element = document.createElement('div');
+                this.element.className = 'guardian';
+                
+                // Create line element
+                this.line = document.createElement('div');
+                this.line.className = 'guardian-line';
+                
+                // Create draggable dot element
+                this.dot = document.createElement('div');
+                this.dot.className = 'guardian-dot';
+                
+                // Add drag functionality to dot
+                this.setupDotDrag();
+                
+                document.getElementById('arena').appendChild(this.line);
+                document.getElementById('arena').appendChild(this.element);
+                document.getElementById('arena').appendChild(this.dot);
+                
+                this.updatePosition(nkX, nkY);
+            }
+
+            setupDotDrag() {
+                let isDragging = false;
+
+                this.dot.addEventListener('mousedown', (e) => {
+                    const setLinesMode = document.getElementById('setLinesToggle').checked;
+                    if (isRunning || !setLinesMode) return;
+                    
+                    isDragging = true;
+                    
+                    // Prevent text selection and default drag behavior
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.body.style.userSelect = 'none';
+                    
+                    // Disable transitions during drag for immediate response
+                    this.dot.style.transition = 'none';
+                    
+                    // Change cursor
+                    this.dot.style.cursor = 'grabbing';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    const setLinesMode = document.getElementById('setLinesToggle').checked;
+                    if (!isDragging || isRunning || !setLinesMode) return;
+                    
+                    // Prevent text selection during drag
+                    e.preventDefault();
+                    
+                    // Calculate dot position relative to arena
+                    const arena = document.getElementById('arena');
+                    const rect = arena.getBoundingClientRect();
+                    const dotX = e.clientX - rect.left;
+                    const dotY = e.clientY - rect.top;
+                    
+                    // Keep dot within arena bounds
+                    const clampedX = Math.max(4, Math.min(796, dotX)); // 4px margin for dot radius
+                    const clampedY = Math.max(4, Math.min(796, dotY));
+                    
+                    // Update line properties based on clamped dot position
+                    this.updateLineFromDotPosition(clampedX, clampedY);
+                });
+
+                document.addEventListener('mouseup', (e) => {
+                    if (isDragging) {
+                        isDragging = false;
+                        
+                        // Restore normal behavior
+                        document.body.style.userSelect = '';
+                        this.dot.style.cursor = 'grab';
+                        
+                        // Re-enable transitions after drag
+                        this.dot.style.transition = 'all 0.2s ease';
+                        
+                        e.preventDefault();
+                    }
+                });
+
+                // Prevent context menu on right click
+                this.dot.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+
+                // Prevent drag and drop
+                this.dot.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
+                });
+            }
+
+            updateLineFromDotPosition(dotX, dotY) {
+                // Get guardian center position in arena coordinates
+                const guardianCenterX = this.guardianX + GUARDIAN_SIZE/2;
+                const guardianCenterY = this.guardianY + GUARDIAN_SIZE/2;
+                
+                // Calculate line properties
+                const deltaX = dotX - guardianCenterX;
+                const deltaY = dotY - guardianCenterY;
+                this.lineLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                this.lineAngle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+                
+                this.updateLineAndDot();
+            }
+
+            updatePosition(nkX, nkY) {
+                this.nkX = nkX;
+                this.nkY = nkY;
+                
+                const radianAngle = (this.angle * Math.PI) / 180;
+                const x = nkX + Math.cos(radianAngle) * this.distance;
+                const y = nkY + Math.sin(radianAngle) * this.distance;
+                
+                this.guardianX = x - GUARDIAN_SIZE/2;
+                this.guardianY = y - GUARDIAN_SIZE/2;
+                
+                this.element.style.left = this.guardianX + 'px';
+                this.element.style.top = this.guardianY + 'px';
+                
+                this.updateLineAndDot();
+            }
+
+            updateLineAndDot() {
+                const guardianCenterX = this.guardianX + GUARDIAN_SIZE/2;
+                const guardianCenterY = this.guardianY + GUARDIAN_SIZE/2;
+                
+                // Update line - center it on the guardian center
+                this.line.style.left = guardianCenterX + 'px';
+                this.line.style.top = (guardianCenterY - 3) + 'px'; // -3 to center the 6px height line
+                this.line.style.width = this.lineLength + 'px';
+                this.line.style.transform = `rotate(${this.lineAngle}deg)`;
+                
+                // Update dot position at end of line
+                const dotX = guardianCenterX + Math.cos(this.lineAngle * Math.PI / 180) * this.lineLength;
+                const dotY = guardianCenterY + Math.sin(this.lineAngle * Math.PI / 180) * this.lineLength;
+                
+                this.dot.style.left = (dotX - 6) + 'px'; // -6 to center the 12px dot
+                this.dot.style.top = (dotY - 6) + 'px';
+            }
+
+            fireBeam() {
+                // Calculate beam direction from guardian center along the line
+                const guardianCenterX = this.guardianX + GUARDIAN_SIZE/2;
+                const guardianCenterY = this.guardianY + GUARDIAN_SIZE/2;
+                
+                // Convert line angle to direction vector
+                const beamDirX = Math.cos(this.lineAngle * Math.PI / 180);
+                const beamDirY = Math.sin(this.lineAngle * Math.PI / 180);
+                
+                // Find closest core that intersects with the beam line
+                let closestCore = null;
+                let closestDistance = Infinity;
+                
+                cores.forEach(core => {
+                    const intersection = this.lineIntersectsCircle(
+                        guardianCenterX, guardianCenterY,
+                        beamDirX, beamDirY,
+                        core.x, core.y, CORE_DIAMETER / 2
+                    );
+                    
+                    if (intersection.intersects && intersection.distance < closestDistance) {
+                        closestDistance = intersection.distance;
+                        closestCore = core;
+                    }
+                });
+                
+                // Remove the closest intersecting core
+                if (closestCore) {
+                    const coreIndex = cores.indexOf(closestCore);
+                    if (coreIndex > -1) {
+                        cores.splice(coreIndex, 1);
+                        closestCore.remove();
+                        updateCoreCount();
+                    }
+                }
+            }
+
+            lineIntersectsCircle(lineStartX, lineStartY, lineDirX, lineDirY, circleX, circleY, circleRadius) {
+                // Vector from line start to circle center
+                const toCircleX = circleX - lineStartX;
+                const toCircleY = circleY - lineStartY;
+                
+                // Project circle center onto line direction to find closest point on line
+                const projectionLength = toCircleX * lineDirX + toCircleY * lineDirY;
+                
+                // Only consider forward direction (positive projection)
+                if (projectionLength < 0) {
+                    return { intersects: false, distance: Infinity };
+                }
+                
+                // Find closest point on line to circle center
+                const closestX = lineStartX + projectionLength * lineDirX;
+                const closestY = lineStartY + projectionLength * lineDirY;
+                
+                // Calculate distance from circle center to closest point on line
+                const distanceToLine = Math.sqrt(
+                    Math.pow(circleX - closestX, 2) + Math.pow(circleY - closestY, 2)
+                );
+                
+                // Check if line intersects circle
+                const intersects = distanceToLine <= circleRadius;
+                
+                return {
+                    intersects: intersects,
+                    distance: projectionLength
+                };
+            }
+
+            remove() {
+                this.element.remove();
+                this.line.remove();
+                this.dot.remove();
+            }
+        }
+
         // Expansion ring class
         class ExpansionRing {
             constructor(x, y, level) {
@@ -289,20 +719,10 @@
                 this.coreY = y;
                 this.level = level;
                 
-                // Ring specifications: Each ring is 0.38 units wide
-                // Ring 1: inner edge 0.38 units from core outer edge
-                // Ring 2: inner edge where ring 1's outer edge was
-                // Ring 3: inner edge where ring 2's outer edge was, etc.
+                const coreRadius = CORE_DIAMETER / 2;
+                const unitSize = 0.38 * UNIT_IN_PIXELS;
                 
-                const coreRadius = CORE_DIAMETER / 2; // 37.5px
-                const unitSize = 0.38 * UNIT_IN_PIXELS; // 28.5px
-                
-                // Calculate ring position based on level
-                // Level 1: gap of 0.38 units, then 0.38 units wide
-                // Level 2: gap of 0.76 units (0.38 + 0.38), then 0.38 units wide
-                // Level 3: gap of 1.14 units (0.38 + 0.38 + 0.38), then 0.38 units wide
-                
-                const gapFromCore = unitSize * level; // Gap increases with each level
+                const gapFromCore = unitSize * level;
                 this.innerRadius = coreRadius + gapFromCore;
                 this.outerRadius = this.innerRadius + unitSize;
                 
@@ -326,7 +746,6 @@
                 this.element.style.left = (this.coreX - this.outerRadius) + 'px';
                 this.element.style.top = (this.coreY - this.outerRadius) + 'px';
                 
-                // Create the ring effect using border
                 const borderWidth = this.outerRadius - this.innerRadius;
                 this.element.style.border = borderWidth + 'px solid rgba(239, 68, 68, 0.8)';
                 this.element.style.background = 'transparent';
@@ -338,21 +757,11 @@
             }
         }
 
-        // Simulation state
-        let cores = [];
-        let isRunning = false;
-        let lastTime = 0;
-        let animationId = null;
-        let speedMultiplier = 1;
-        let coreCounter = 0; // Track total cores created
-
         // Create radial lines through origin
         function createRadialLines() {
-            const lineLength = 800; // Full width/height of arena
+            const lineLength = 800;
             const lineWidth = 2;
-            
-            // 3 lines spaced 60 degrees apart, with one horizontal
-            const angles = [0, 60, 120]; // 0° = horizontal, 60°, 120°
+            const angles = [0, 60, 120];
             
             angles.forEach(angle => {
                 const line = document.createElement('div');
@@ -366,29 +775,14 @@
             });
         }
 
-        // Click to place core
-        document.getElementById('arena').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const arena = document.getElementById('arena');
-            const rect = arena.getBoundingClientRect();
-            
-            // Calculate click position relative to arena
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // Check if click is within arena bounds
-            const distanceFromCenter = Math.sqrt((x - ARENA_CENTER.x) ** 2 + (y - ARENA_CENTER.y) ** 2);
-            if (distanceFromCenter <= 400) { // Within arena radius (expanded from 305 to 400)
-                // Get rotation direction from toggle
-                const isClockwise = document.getElementById('rotationToggle').checked;
-                coreCounter++; // Increment core counter
-                const core = new Core(x, y, isClockwise, coreCounter);
-                cores.push(core);
-                updateCoreCount();
-            }
-        });
+        // Simulation state
+        let cores = [];
+        let nexusKing = null;
+        let isRunning = false;
+        let lastTime = 0;
+        let animationId = null;
+        let speedMultiplier = 1;
+        let coreCounter = 0;
 
         // Animation loop
         function animate(currentTime) {
@@ -397,11 +791,54 @@
             const deltaTime = (currentTime - lastTime) * speedMultiplier;
             lastTime = currentTime;
 
-            // Update all cores (they no longer get removed automatically)
             cores.forEach(core => core.update(deltaTime, currentTime * speedMultiplier));
+            
+            if (nexusKing) {
+                nexusKing.update(deltaTime, currentTime * speedMultiplier);
+                
+                // Check if NK was removed during update (disappeared)
+                if (!document.getElementById('arena').contains(nexusKing.element)) {
+                    nexusKing = null;
+                }
+            }
             
             animationId = requestAnimationFrame(animate);
         }
+
+        // Click to place core or nexus king
+        document.getElementById('arena').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const arena = document.getElementById('arena');
+            const rect = arena.getBoundingClientRect();
+            
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const distanceFromCenter = Math.sqrt((x - ARENA_CENTER.x) ** 2 + (y - ARENA_CENTER.y) ** 2);
+            if (distanceFromCenter <= 400) {
+                const isNexusKingMode = document.getElementById('nexusKingToggle').checked;
+                const setLinesMode = document.getElementById('setLinesToggle').checked;
+                
+                // Disable placement when in Set Lines mode
+                if (setLinesMode) return;
+                
+                if (isNexusKingMode) {
+                    if (nexusKing) {
+                        nexusKing.moveToPosition(x, y);
+                    } else {
+                        nexusKing = new NexusKing(x, y);
+                    }
+                } else {
+                    const isClockwise = document.getElementById('rotationToggle').checked;
+                    coreCounter++;
+                    const core = new Core(x, y, isClockwise, coreCounter);
+                    cores.push(core);
+                }
+                updateCoreCount();
+            }
+        });
 
         // Controls
         document.getElementById('playBtn').addEventListener('click', () => {
@@ -427,10 +864,14 @@
             
             cores.forEach(core => core.remove());
             cores = [];
-            coreCounter = 0; // Reset core counter
+            coreCounter = 0;
+            
+            if (nexusKing) {
+                nexusKing.resetCountdown();
+            }
+            
             updateCoreCount();
             
-            // Clear any orphaned expansion rings
             document.querySelectorAll('.expansion-ring').forEach(ring => ring.remove());
         });
 
@@ -447,7 +888,8 @@
         });
 
         function updateCoreCount() {
-            document.getElementById('coreCount').textContent = cores.length;
+            const totalCount = cores.length + (nexusKing ? 1 : 0);
+            document.getElementById('coreCount').textContent = totalCount;
         }
 
         // Initialize
