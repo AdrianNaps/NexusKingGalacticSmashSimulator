@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena Core Simulator</title>
+    <title>Nexus King Galactic Smash Simulator</title>
     <style>
         body {
             margin: 0;
@@ -126,7 +126,7 @@
     </style>
 </head>
 <body>
-    <h1>Arena Core Simulator</h1>
+    <h1>Nexus King Galactic Smash Simulator</h1>
     
     <div class="controls">
         <button id="playBtn">Play</button>
@@ -172,11 +172,12 @@
 
         // Core class
         class Core {
-            constructor(clickX, clickY, isClockwise) {
+            constructor(clickX, clickY, isClockwise, coreNumber) {
                 // Store the exact click position as the center of the core
                 this.centerX = clickX;
                 this.centerY = clickY;
                 this.isClockwise = isClockwise;
+                this.coreNumber = coreNumber;
                 
                 // Calculate track radius and starting angle from center
                 this.trackRadius = Math.sqrt((clickX - ARENA_CENTER.x) ** 2 + (clickY - ARENA_CENTER.y) ** 2);
@@ -189,13 +190,13 @@
                 
                 // Create a span for the text to ensure proper centering
                 const textSpan = document.createElement('span');
-                textSpan.textContent = isClockwise ? 'CW' : 'CCW';
+                textSpan.textContent = `${isClockwise ? 'CW' : 'CCW'}${coreNumber}`;
                 textSpan.style.position = 'absolute';
                 textSpan.style.top = '50%';
                 textSpan.style.left = '50%';
                 textSpan.style.transform = 'translate(-50%, -50%)';
                 textSpan.style.fontWeight = 'bold';
-                textSpan.style.fontSize = '14px';
+                textSpan.style.fontSize = '12px';
                 textSpan.style.color = 'white';
                 textSpan.style.textShadow = '2px 2px 2px rgba(0,0,0,0.9)';
                 textSpan.style.fontFamily = 'Arial, sans-serif';
@@ -233,30 +234,31 @@
             }
 
             update(deltaTime, currentTime) {
-                // Check if core should be removed (after 15 intervals)
-                if (this.intervalCount >= this.maxIntervals) {
-                    return false; // Signal for removal
-                }
-
                 // Move along circular track (clockwise or counter-clockwise)
                 const angularSpeed = CORE_SPEED / this.trackRadius;
                 const direction = this.isClockwise ? 1 : -1;
                 this.angle += angularSpeed * deltaTime * direction;
                 this.updatePosition();
 
-                // Handle expansions - replace ring every interval
-                if (currentTime - this.lastExpansionTime >= EXPANSION_INTERVAL) {
+                // Handle expansions - only for first 15 intervals
+                if (this.intervalCount < this.maxIntervals && currentTime - this.lastExpansionTime >= EXPANSION_INTERVAL) {
                     this.expand();
                     this.lastExpansionTime = currentTime;
                     this.intervalCount++;
+                    
+                    // Remove ring after 15th interval
+                    if (this.intervalCount >= this.maxIntervals && this.currentRing) {
+                        this.currentRing.remove();
+                        this.currentRing = null;
+                    }
                 }
 
-                // Update current ring to follow the core
+                // Update current ring to follow the core (if it exists)
                 if (this.currentRing) {
                     this.currentRing.updatePosition(this.x, this.y);
                 }
 
-                return true; // Core continues to exist
+                return true; // Core always continues to exist
             }
 
             expand() {
@@ -265,9 +267,11 @@
                     this.currentRing.remove();
                 }
                 
-                // Create new ring at next level
-                this.ringLevel++;
-                this.currentRing = new ExpansionRing(this.x, this.y, this.ringLevel);
+                // Create new ring at next level (only if under 15 intervals)
+                if (this.intervalCount < this.maxIntervals) {
+                    this.ringLevel++;
+                    this.currentRing = new ExpansionRing(this.x, this.y, this.ringLevel);
+                }
             }
 
             remove() {
@@ -340,6 +344,7 @@
         let lastTime = 0;
         let animationId = null;
         let speedMultiplier = 1;
+        let coreCounter = 0; // Track total cores created
 
         // Create radial lines through origin
         function createRadialLines() {
@@ -378,7 +383,8 @@
             if (distanceFromCenter <= 400) { // Within arena radius (expanded from 305 to 400)
                 // Get rotation direction from toggle
                 const isClockwise = document.getElementById('rotationToggle').checked;
-                const core = new Core(x, y, isClockwise);
+                coreCounter++; // Increment core counter
+                const core = new Core(x, y, isClockwise, coreCounter);
                 cores.push(core);
                 updateCoreCount();
             }
@@ -391,16 +397,8 @@
             const deltaTime = (currentTime - lastTime) * speedMultiplier;
             lastTime = currentTime;
 
-            // Update cores and remove expired ones
-            cores = cores.filter(core => {
-                const shouldContinue = core.update(deltaTime, currentTime * speedMultiplier);
-                if (!shouldContinue) {
-                    core.remove();
-                    updateCoreCount();
-                    return false;
-                }
-                return true;
-            });
+            // Update all cores (they no longer get removed automatically)
+            cores.forEach(core => core.update(deltaTime, currentTime * speedMultiplier));
             
             animationId = requestAnimationFrame(animate);
         }
@@ -429,6 +427,7 @@
             
             cores.forEach(core => core.remove());
             cores = [];
+            coreCounter = 0; // Reset core counter
             updateCoreCount();
             
             // Clear any orphaned expansion rings
